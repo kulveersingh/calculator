@@ -26,7 +26,7 @@ jobs:
         run: flutter analyze
 
       - name: Run logic tests
-        run: dart run lib/calculator_engine.dart
+        run: dart run lib/main.dart --self-test
 
       - name: Build web (release)
         run: flutter build web --release
@@ -46,7 +46,12 @@ jobs:
         run: flutter pub get
 
       - name: Build macOS (arm64 release)
-        run: flutter build macos --release --excluded-architectures x86_64
+        run: flutter build macos --release --no-codesign
+        env:
+          # Force arm64-only: x86_64 fails against Xcode 27's higher
+          # macOS deployment target. EXCLUDED_ARCHS is an Xcode build
+          # setting, not a flutter CLI flag, so it's passed via env.
+          EXCLUDED_ARCHS: "x86_64"
 
       - name: Upload app bundle
         uses: actions/upload-artifact@v4
