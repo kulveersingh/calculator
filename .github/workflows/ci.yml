@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          # Match the local Flutter 3.29.0 used on the dev machine.
+          flutter-version: '3.29.0'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Run logic tests
+        run: dart run lib/calculator_engine.dart
+
+      - name: Build web (release)
+        run: flutter build web --release
+
+  macos-build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.29.0'
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build macOS (arm64 release)
+        run: flutter build macos --release --excluded-architectures x86_64
+
+      - name: Upload app bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: calculator-app
+          path: build/macos/Build/Products/Release/calculator.app
+          if-no-files-found: error
